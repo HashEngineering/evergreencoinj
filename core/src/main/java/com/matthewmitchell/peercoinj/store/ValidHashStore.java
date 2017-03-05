@@ -49,7 +49,7 @@ public class ValidHashStore {
 	int index;
 	boolean initialFind = true;
 
-	private static String GENESIS_MINI_HASH = "e327cd80c8b17efda4ea08c5877e95d8"; 
+	private static String GENESIS_MINI_HASH = "00000a02cefbc063ba09034a6fbc123f7062b7ee0e4eed9128a1cadc7533e388";
 	
     public interface TrustedServersInterface {
         /**
@@ -72,7 +72,7 @@ public class ValidHashStore {
 
     static {
         try {
-            SERVER = new URL("https://peercoinexplorer.info/q/getvalidhashes");
+            SERVER = new URL("http://vps104674.vps.ovh.ca:4001/chain/EverGreenCoin/q/getvalidhashes");
         } catch (MalformedURLException ex) {
         }
     }
@@ -130,12 +130,12 @@ public class ValidHashStore {
 		byte[] data = new byte[(int)len];
 		file.read(data, 0, (int)len);
 		
-		byte[] b = new byte[16];
+		byte[] b = new byte[32];
 		
-		for (int x = 0; x < len; x += 16) {
-			System.arraycopy(data, x, b, 0, 16);
+		for (int x = 0; x < len; x += 32) {
+			System.arraycopy(data, x, b, 0, 32);
 			validHashesArray.add(b);
-			b = new byte[16];
+			b = new byte[32];
 		}
 		
 		file.close();
@@ -149,7 +149,7 @@ public class ValidHashStore {
 	private void writeHash(byte[] hash, BufferedOutputStream file) throws IOException {
 		
 		validHashesArray.add(hash);
-		file.write(hash, 0, 16);
+		file.write(hash, 0, 32);
 		
 	}
 	
@@ -174,13 +174,13 @@ public class ValidHashStore {
 	
 	private byte[] getHashFromInputStream(InputStream is) throws IOException {
 		
-		byte[] hash = new byte[16];
+		byte[] hash = new byte[64];
 		int x = 0, res;
 		
-		while (x < 16 && (res = is.read()) != -1)
+		while (x < 64 && (res = is.read()) != -1)
 			hash[x++] = (byte) res;
 		
-		if (x != 16)
+		if (x != 64)
 			return null;
 		
 		return hash;
@@ -197,11 +197,23 @@ public class ValidHashStore {
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(30000);
             connection.setRequestMethod("POST");
-            connection.setRequestProperty("Content-Type", "application/octet-stream");
+            //connection.setRequestProperty("Content-Type", "application/octet-stream");
+            connection.setRequestProperty("Content-Type", "application/json");
             connection.setRequestProperty("Accept-Encoding", ""); 
             connection.setDoOutput(true);
             java.io.OutputStream os = connection.getOutputStream();
-            os.write(locator, 0, locatorSize);
+            StringBuilder jsonData = new StringBuilder("{\n");
+            for(int i = 0; i < 1;++i)
+            {
+                jsonData.append("hash: \"");
+                byte [] hash = new byte[32];
+                System.arraycopy(locator, i*32, hash, 0, 32);
+                jsonData.append(new Sha256Hash(hash).toString());
+                jsonData.append("\"\n");
+            }
+            jsonData.append("\n}");
+            //os.write(locator, 0, locatorSize);
+            os.write(jsonData.toString().getBytes());
             os.flush();
             os.close();
 
@@ -220,15 +232,18 @@ public class ValidHashStore {
                     index = 0;
                     initialFind = true;
 
-                    // Write new hashes. Ensure a limit of 50,000 hashes.
+                    // Write new hashes. Ensure a limit of 2000 hashes.
 
                     byte[] b;
+                    int x = 0;
 
-                    for (int x = 0; (b = getHashFromInputStream(is)) != null && x < 50000; x++)
-                        writeHash(b, file);
+                    for (x = 0; (b = getHashFromInputStream(is)) != null && x < 2000; x++)
+                        writeHash(Hex.decode(new String(b)), file);
 
                     file.flush();
                     file.close();
+
+                    log.info("VerifyHashes:  downloaded " + x + " block hashes");
 
                     return false;
 
@@ -248,9 +263,11 @@ public class ValidHashStore {
 
     public boolean isValidHash(Sha256Hash hash, AbstractBlockChain blockChain, boolean waitForServer) throws IOException {
 
+        return true;
+        /*
         // Get 16 bytes only
-        byte[] cmpHash = new byte[16];
-        System.arraycopy(Utils.reverseBytes(hash.getBytes()), 0, cmpHash, 0, 16);
+        byte[] cmpHash = new byte[32];
+        System.arraycopy(hash.getBytes(), 0, cmpHash, 0, 32);
 
         // First check the existing hashes
         if (!servers.invalidated() && isInValidHashes(cmpHash))
@@ -269,7 +286,7 @@ public class ValidHashStore {
         int offset = 0;
 
         for (int i = 100; cursor != null && i > 0; i--, offset += 32) {
-            System.arraycopy(Utils.reverseBytes(cursor.getHeader().getHash().getBytes()), 0, locator, offset, 32);
+            System.arraycopy(cursor.getHeader().getHash().getBytes(), 0, locator, offset, 32);
 
             try {
                 cursor = cursor.getPrev(store);
@@ -279,7 +296,6 @@ public class ValidHashStore {
         }
 
         // Now download hashes from server.
-
         // But if waitForServer is true, first wait a while in case the server hasn't received or processed this block yet.
         // We assume the server is well connected and 30 seconds would therefore be more than enough in most cases.
         if (waitForServer)
@@ -303,7 +319,7 @@ public class ValidHashStore {
 
         // Lastly check valid hashes again
         return isInValidHashes(cmpHash);
-
+*/
     }
 	
 	public void close(){

@@ -16,6 +16,7 @@
 
 package com.matthewmitchell.peercoinj.core;
 
+import com.hashengineering.crypto.X15;
 import com.matthewmitchell.peercoinj.script.Script;
 import com.matthewmitchell.peercoinj.script.ScriptBuilder;
 import com.google.common.annotations.VisibleForTesting;
@@ -518,7 +519,7 @@ public class Block extends Message {
         try {
             ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(HEADER_SIZE);
             writeHeader(bos);
-            return new Sha256Hash(Utils.reverseBytes(doubleDigest(bos.toByteArray())));
+            return new Sha256Hash(Utils.reverseBytes(X15.x15Digest(bos.toByteArray())));
         } catch (IOException e) {
             throw new RuntimeException(e); // Cannot happen.
         }
@@ -830,7 +831,7 @@ public class Block extends Message {
     }
 
     /** Exists only for unit testing. */
-    void setMerkleRoot(Sha256Hash value) {
+    public void setMerkleRoot(Sha256Hash value) {
         unCacheHeader();
         merkleRoot = value;
         hash = null;

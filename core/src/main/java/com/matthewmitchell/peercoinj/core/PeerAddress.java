@@ -79,7 +79,7 @@ public class PeerAddress extends ChildMessage {
         this.port = port;
         this.protocolVersion = protocolVersion;
         this.services = BigInteger.ZERO;
-        length = protocolVersion > 31402 ? MESSAGE_SIZE : MESSAGE_SIZE - 4;
+        length = protocolVersion > 70000 ? MESSAGE_SIZE : MESSAGE_SIZE - 4;
     }
 
     /**

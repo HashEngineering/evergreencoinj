@@ -10,3 +10,5 @@ target
 tags
 *.sw*
 Session.vim
+libs/
+obj/

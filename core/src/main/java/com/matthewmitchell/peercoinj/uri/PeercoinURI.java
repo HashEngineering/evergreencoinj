@@ -94,7 +94,7 @@ public class PeercoinURI {
     public static final String FIELD_ADDRESS = "address";
     public static final String FIELD_PAYMENT_REQUEST_URL = "r";
 
-    public static final String PEERCOIN_SCHEME = "ppcoin";
+    public static final String PEERCOIN_SCHEME = "evergreencoin";
     private static final String ENCODED_SPACE_CHARACTER = "%20";
     private static final String AMPERSAND_SEPARATOR = "&";
     private static final String QUESTION_MARK_SEPARATOR = "?";

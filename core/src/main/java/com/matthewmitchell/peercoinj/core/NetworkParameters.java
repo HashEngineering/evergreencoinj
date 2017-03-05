@@ -44,15 +44,15 @@ public abstract class NetworkParameters implements Serializable {
     /**
      * The protocol version this library implements.
      */
-    public static final int PROTOCOL_VERSION = 60012;
+    public static final int PROTOCOL_VERSION = 80015;
 
     /**
      * The alert signing key.
      */
-    public static final byte[] SATOSHI_KEY = Utils.HEX.decode("04a0a849dd49b113d3179a332dd77715c43be4d0076e2f19e66de23dd707e56630f792f298dfd209bf042bb3561f4af6983f3d81e439737ab0bf7f898fecd21aab");
+    public static final byte[] SATOSHI_KEY = Utils.HEX.decode("04f5588da00daa3a32b31ef5d6b841118cddacee63d8c9a09335e600db28f9588fb2110040a701cfcebd30e38414f10f92843046742fac0f639bfb52964b566bce");
 
     /** The string returned by getId() for the main, production network where people trade things. */
-    public static final String ID_MAINNET = "org.peercoin.production";
+    public static final String ID_MAINNET = "org.evergreencoin.production";
     /** Unit test network. */
     public static final String ID_UNITTESTNET = "com.matthewmitchell.peercoinj.unittest";
 
@@ -93,11 +93,11 @@ public abstract class NetworkParameters implements Serializable {
     private static Block createGenesis(NetworkParameters n) {
         Block genesisBlock = new Block(n);
         Transaction t = new Transaction(n);
-        t.setTime(1345083810);
+        t.setTime(1448956800);
         try {
             // A script containing the difficulty bits and the following message:
             //
-            //   "Matonis 07-AUG-2012 Parallel Currencies And The Roadmap To Monetary Freedom"
+            //   "EGC to the tree top!"
             byte[] bytes = Utils.HEX.decode
                     ("04ffff001d020f274b4d61746f6e69732030372d4155472d3230313220506172616c6c656c2043757272656e6369657320416e642054686520526f61646d617020546f204d6f6e65746172792046726565646f6d");
             t.addInput(new TransactionInput(n, t, bytes));
@@ -109,14 +109,17 @@ public abstract class NetworkParameters implements Serializable {
         }
         genesisBlock.addTransaction(t);
         
+
+        genesisBlock.setMerkleRoot(new Sha256Hash("201817b2cc654357f5491cd1c2c0553e7d2001a057e1fb0d31ce7c4259c1cbe5"));
+
         String merkleHash = genesisBlock.getMerkleRoot().toString();
-        checkState(merkleHash.equals("3c2d8f85fab4d17aac558cc648a1a58acff0de6deb890c29985690052c5993c2"), merkleHash);
+        checkState(merkleHash.equals("201817b2cc654357f5491cd1c2c0553e7d2001a057e1fb0d31ce7c4259c1cbe5"), merkleHash);
         
         return genesisBlock;
     }
 
     public static final int TARGET_TIMESPAN = 7 * 24 * 60 * 60;  // 1 day.
-    public static final int TARGET_SPACING = 10 * 60;  // 10 minutes per block.
+    public static final int TARGET_SPACING = 60;  // 10 minutes per block.
     public static final int INTERVAL = 1; // Every block
     
     /**
@@ -126,7 +129,7 @@ public abstract class NetworkParameters implements Serializable {
      */
     public static final int BIP16_ENFORCE_TIME = 1333238400;
 
-    public static final long MAX_COINS = 2000000000L;
+    public static final long MAX_COINS = 26298000L;
     public static final Coin MAX_MONEY = COIN.multiply(MAX_COINS);
 
     /** Alias for MainNetParams.get(), use that instead */
