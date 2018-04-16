@@ -72,8 +72,9 @@ public class ValidHashStore {
 
     static {
         try {
-            SERVER = new URL("http://vps104674.vps.ovh.ca:4001/chain/EverGreenCoin/q/getvalidhashes");
+            SERVER = new URL("http://69.141.235.64:4001/ext/getvalidhashes");
         } catch (MalformedURLException ex) {
+            // do nothing
         }
     }
 
