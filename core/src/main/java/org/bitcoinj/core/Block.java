@@ -20,6 +20,7 @@ package org.bitcoinj.core;
 import com.google.common.annotations.*;
 import com.google.common.base.*;
 import com.google.common.collect.*;
+import com.hashengineering.crypto.X15;
 import org.bitcoinj.script.*;
 import org.slf4j.*;
 
@@ -101,6 +102,9 @@ public class Block extends Message {
     /** If null, it means this object holds only the headers. */
     @Nullable List<Transaction> transactions;
 
+    //evergreencoin
+    private byte[] blockSig;
+
     /** Stores the hash of the block. If null, getHash() will recalculate it. */
     private Sha256Hash hash;
 
@@ -122,6 +126,7 @@ public class Block extends Message {
         prevBlockHash = Sha256Hash.ZERO_HASH;
 
         length = HEADER_SIZE;
+        blockSig = null;
     }
 
     /**
@@ -203,6 +208,7 @@ public class Block extends Message {
         this.nonce = nonce;
         this.transactions = new LinkedList<Transaction>();
         this.transactions.addAll(transactions);
+        this.blockSig = null;
     }
 
 
@@ -232,6 +238,7 @@ public class Block extends Message {
         if (payload.length == cursor) {
             // This message is just a header, it has no transactions.
             transactionBytesValid = false;
+            blockSig = null;
             return;
         }
 
@@ -247,6 +254,13 @@ public class Block extends Message {
             optimalEncodingMessageSize += tx.getOptimalEncodingMessageSize();
         }
         transactionBytesValid = serializer.isParseRetainMode();
+
+        if (cursor != payload.length && !getHashAsString().equals("3cdd9c2facce405f5cc220fb21a10e493041451c463a22e1ff6fe903fc5769fc")) {
+            // Obtain signature
+            int sigLen = (int) readVarInt();
+            blockSig = readBytes(sigLen);
+            optimalEncodingMessageSize += VarInt.sizeOf(sigLen) + sigLen;
+        }
     }
 
     @Override
@@ -308,6 +322,13 @@ public class Block extends Message {
             for (Transaction tx : transactions) {
                 tx.bitcoinSerialize(stream);
             }
+        }
+
+        // Finally write block signature
+
+        if (blockSig != null) {
+            stream.write(new VarInt(blockSig.length).encode());
+            stream.write(blockSig);
         }
     }
 
@@ -404,7 +425,7 @@ public class Block extends Message {
         try {
             ByteArrayOutputStream bos = new UnsafeByteArrayOutputStream(HEADER_SIZE);
             writeHeader(bos);
-            return Sha256Hash.wrapReversed(Sha256Hash.hashTwice(bos.toByteArray()));
+            return Sha256Hash.wrapReversed(X15.x15Digest(bos.toByteArray()));
         } catch (IOException e) {
             throw new RuntimeException(e); // Cannot happen.
         }
@@ -532,25 +553,6 @@ public class Block extends Message {
 
     /** Returns true if the hash of the block is OK (lower than difficulty target). */
     protected boolean checkProofOfWork(boolean throwException) throws VerificationException {
-        // This part is key - it is what proves the block was as difficult to make as it claims
-        // to be. Note however that in the context of this function, the block can claim to be
-        // as difficult as it wants to be .... if somebody was able to take control of our network
-        // connection and fork us onto a different chain, they could send us valid blocks with
-        // ridiculously easy difficulty and this function would accept them.
-        //
-        // To prevent this attack from being possible, elsewhere we check that the difficultyTarget
-        // field is of the right value. This requires us to have the preceeding blocks.
-        BigInteger target = getDifficultyTargetAsInteger();
-
-        BigInteger h = getHash().toBigInteger();
-        if (h.compareTo(target) > 0) {
-            // Proof of work check failed!
-            if (throwException)
-                throw new VerificationException("Hash is higher than target: " + getHashAsString() + " vs "
-                        + target.toString(16));
-            else
-                return false;
-        }
         return true;
     }
 
@@ -742,7 +744,7 @@ public class Block extends Message {
     }
 
     /** Exists only for unit testing. */
-    void setMerkleRoot(Sha256Hash value) {
+    public void setMerkleRoot(Sha256Hash value) {
         unCacheHeader();
         merkleRoot = value;
         hash = null;
