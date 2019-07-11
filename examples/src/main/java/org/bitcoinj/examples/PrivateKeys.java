@@ -20,8 +20,10 @@ package org.bitcoinj.examples;
 import org.bitcoinj.core.*;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.store.MemoryBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 import org.bitcoinj.wallet.Wallet;
 
+import java.io.File;
 import java.math.BigInteger;
 import java.net.InetAddress;
 
@@ -60,7 +62,8 @@ public class PrivateKeys {
 
             // Find the transactions that involve those coins.
             final MemoryBlockStore blockStore = new MemoryBlockStore(params);
-            BlockChain chain = new BlockChain(params, wallet, blockStore);
+            ValidHashStore validHashStore = new ValidHashStore(new File("validhashes.dat"));
+            BlockChain chain = new BlockChain(params, wallet, blockStore, validHashStore);
 
             final PeerGroup peerGroup = new PeerGroup(params, chain);
             peerGroup.addAddress(new PeerAddress(InetAddress.getLocalHost()));

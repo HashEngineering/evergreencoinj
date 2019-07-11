@@ -92,7 +92,7 @@ public class TestWithNetworkConnections {
             key = wallet.freshReceiveKey();
             address = key.toAddress(PARAMS);
         }
-        blockChain = new BlockChain(PARAMS, wallet, blockStore);
+        blockChain = new BlockChain(PARAMS, wallet, blockStore, null);
 
         startPeerServers();
         if (clientType == ClientType.NIO_CLIENT_MANAGER || clientType == ClientType.BLOCKING_CLIENT_MANAGER) {

@@ -74,7 +74,7 @@ public class BlockChainTest {
     public void setUp() throws Exception {
         BriefLogFormatter.initVerbose();
         Context.propagate(new Context(testNet, 100, Coin.ZERO, false));
-        testNetChain = new BlockChain(testNet, new Wallet(testNet), new MemoryBlockStore(testNet));
+        testNetChain = new BlockChain(testNet, new Wallet(testNet), new MemoryBlockStore(testNet), null);
         Context.propagate(new Context(PARAMS, 100, Coin.ZERO, false));
         wallet = new Wallet(PARAMS) {
             @Override
@@ -90,7 +90,7 @@ public class BlockChainTest {
         wallet.freshReceiveKey();
 
         resetBlockStore();
-        chain = new BlockChain(PARAMS, wallet, blockStore);
+        chain = new BlockChain(PARAMS, wallet, blockStore, null);
 
         coinbaseTo = wallet.currentReceiveKey().toAddress(PARAMS);
     }
@@ -238,7 +238,7 @@ public class BlockChainTest {
     private void testDeprecatedBlockVersion(final long deprecatedVersion, final long newVersion)
             throws Exception {
         final BlockStore versionBlockStore = new MemoryBlockStore(PARAMS);
-        final BlockChain versionChain = new BlockChain(PARAMS, versionBlockStore);
+        final BlockChain versionChain = new BlockChain(PARAMS, versionBlockStore, null);
 
         // Build a historical chain of version 3 blocks
         long timeSeconds = 1231006505;
@@ -418,7 +418,7 @@ public class BlockChainTest {
     @Test
     public void estimatedBlockTime() throws Exception {
         NetworkParameters params = MainNetParams.get();
-        BlockChain prod = new BlockChain(new Context(params), new MemoryBlockStore(params));
+        BlockChain prod = new BlockChain(new Context(params), new MemoryBlockStore(params), null);
         Date d = prod.estimateBlockTime(200000);
         // The actual date of block 200,000 was 2012-09-22 10:47:00
         assertEquals(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US).parse("2012-10-23T08:35:05.000-0700"), d);

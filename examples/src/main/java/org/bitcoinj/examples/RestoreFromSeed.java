@@ -19,6 +19,7 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.net.discovery.DnsDiscovery;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.SPVBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 import org.bitcoinj.wallet.DeterministicSeed;
 import org.bitcoinj.wallet.Wallet;
 
@@ -58,7 +59,8 @@ public class RestoreFromSeed {
 
         // Setting up the BlochChain, the BlocksStore and connecting to the network.
         SPVBlockStore chainStore = new SPVBlockStore(params, chainFile);
-        BlockChain chain = new BlockChain(params, chainStore);
+        ValidHashStore validHashStore = new ValidHashStore(new File("validhashes.dat"));
+        BlockChain chain = new BlockChain(params, chainStore, validHashStore);
         PeerGroup peers = new PeerGroup(params, chain);
         peers.addPeerDiscovery(new DnsDiscovery(params));
 

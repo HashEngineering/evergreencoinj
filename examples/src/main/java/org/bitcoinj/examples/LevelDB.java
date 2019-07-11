@@ -16,12 +16,14 @@
 
 package org.bitcoinj.examples;
 
+import java.io.File;
 import java.net.InetAddress;
 import org.bitcoinj.core.FullPrunedBlockChain;
 import org.bitcoinj.core.PeerGroup;
 import org.bitcoinj.params.MainNetParams;
 import org.bitcoinj.store.FullPrunedBlockStore;
 import org.bitcoinj.store.LevelDBFullPrunedBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 
 public class LevelDB {
     public static void main(String[] args) throws Exception {
@@ -32,9 +34,9 @@ public class LevelDB {
         FullPrunedBlockStore store = new LevelDBFullPrunedBlockStore(
                 MainNetParams.get(), args[0], 1000, 100 * 1024 * 1024l,
                 10 * 1024 * 1024, 100000, true, 390000);
-
+        ValidHashStore validHashStore = new ValidHashStore(new File("validhashes.dat"));
         FullPrunedBlockChain vChain = new FullPrunedBlockChain(
-                MainNetParams.get(), store);
+                MainNetParams.get(), store, validHashStore);
         vChain.setRunScripts(false);
 
         PeerGroup vPeerGroup = new PeerGroup(MainNetParams.get(), vChain);

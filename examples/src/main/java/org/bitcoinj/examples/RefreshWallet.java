@@ -21,6 +21,7 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.MemoryBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 import org.bitcoinj.wallet.Wallet;
 import org.bitcoinj.wallet.listeners.WalletCoinsReceivedEventListener;
 
@@ -39,7 +40,8 @@ public class RefreshWallet {
         // Set up the components and link them together.
         final NetworkParameters params = TestNet3Params.get();
         BlockStore blockStore = new MemoryBlockStore(params);
-        BlockChain chain = new BlockChain(params, wallet, blockStore);
+        ValidHashStore validHashStore = new ValidHashStore(new File("validhashes.dat"));
+        BlockChain chain = new BlockChain(params, wallet, blockStore, validHashStore);
 
         final PeerGroup peerGroup = new PeerGroup(params, chain);
         peerGroup.startAsync();

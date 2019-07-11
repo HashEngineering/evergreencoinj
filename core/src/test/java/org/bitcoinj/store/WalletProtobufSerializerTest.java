@@ -233,7 +233,7 @@ public class WalletProtobufSerializerTest {
     public void testAppearedAtChainHeightDepthAndWorkDone() throws Exception {
         // Test the TransactionConfidence appearedAtChainHeight, depth and workDone field are stored.
 
-        BlockChain chain = new BlockChain(PARAMS, myWallet, new MemoryBlockStore(PARAMS));
+        BlockChain chain = new BlockChain(PARAMS, myWallet, new MemoryBlockStore(PARAMS), null);
 
         final ArrayList<Transaction> txns = new ArrayList<Transaction>(2);
         myWallet.addCoinsReceivedEventListener(new WalletCoinsReceivedEventListener() {
@@ -378,7 +378,7 @@ public class WalletProtobufSerializerTest {
         Block b = PARAMS.getGenesisBlock().createNextBlockWithCoinbase(Block.BLOCK_VERSION_GENESIS, myKey.getPubKey(), FIFTY_COINS, Block.BLOCK_HEIGHT_GENESIS);
         Transaction coinbase = b.getTransactions().get(0);
         assertTrue(coinbase.isCoinBase());
-        BlockChain chain = new BlockChain(PARAMS, myWallet, new MemoryBlockStore(PARAMS));
+        BlockChain chain = new BlockChain(PARAMS, myWallet, new MemoryBlockStore(PARAMS), null);
         assertTrue(chain.add(b));
         // Wallet now has a coinbase tx in it.
         assertEquals(1, myWallet.getTransactions(true).size());

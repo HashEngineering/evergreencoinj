@@ -51,7 +51,7 @@ public class TestWithWallet {
         myKey = wallet.currentReceiveKey();
         myAddress = myKey.toAddress(PARAMS);
         blockStore = new MemoryBlockStore(PARAMS);
-        chain = new BlockChain(PARAMS, wallet, blockStore);
+        chain = new BlockChain(PARAMS, wallet, blockStore, null);
     }
 
     public void tearDown() throws Exception {

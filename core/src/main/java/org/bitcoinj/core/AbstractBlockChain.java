@@ -27,6 +27,7 @@ import org.bitcoinj.wallet.Wallet;
 import org.slf4j.*;
 
 import javax.annotation.*;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
@@ -82,6 +83,7 @@ public abstract class AbstractBlockChain {
 
     /** Keeps a map of block hashes to StoredBlocks. */
     private final BlockStore blockStore;
+    private final ValidHashStore validHashStore;
 
     /**
      * Tracks the top of the best known chain.<p>
@@ -134,18 +136,19 @@ public abstract class AbstractBlockChain {
 
     private final VersionTally versionTally;
 
-    /** See {@link #AbstractBlockChain(Context, List, BlockStore)} */
+    /** See {@link #AbstractBlockChain(Context, List, BlockStore, ValidHashStore)} */
     public AbstractBlockChain(NetworkParameters params, List<? extends Wallet> transactionReceivedListeners,
-                              BlockStore blockStore) throws BlockStoreException {
-        this(Context.getOrCreate(params), transactionReceivedListeners, blockStore);
+                              BlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        this(Context.getOrCreate(params), transactionReceivedListeners, blockStore, validHashStore);
     }
 
     /**
      * Constructs a BlockChain connected to the given list of listeners (eg, wallets) and a store.
      */
     public AbstractBlockChain(Context context, List<? extends Wallet> wallets,
-                              BlockStore blockStore) throws BlockStoreException {
+                              BlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
         this.blockStore = blockStore;
+        this.validHashStore = validHashStore;
         chainHead = blockStore.getChainHead();
         log.info("chain head is at height {}:\n{}", chainHead.getHeight(), chainHead.getHeader());
         this.params = context.getParams();
@@ -485,6 +488,16 @@ public abstract class AbstractBlockChain {
             } else {
                 checkState(lock.isHeldByCurrentThread());
                 // It connects to somewhere on the chain. Not necessarily the top of the best known chain.
+                // Determine if centrally trusted hash
+                // Wait a while for the server if the block is less than three hours old
+                try {
+                    if (validHashStore != null && !validHashStore.isValidHash(block.getHash(), this, block.getTimeSeconds() > Utils.currentTimeSeconds() - 60*60*3)) {
+                        throw new VerificationException("Invalid hash received");
+                    }
+                } catch (IOException e) {
+                    log.error("IO Error when determining valid hashes: ", e);
+                    return false;
+                }
                 params.checkDifficultyTransitions(storedPrev, block, blockStore);
                 connectBlock(block, storedPrev, shouldVerifyTransactions(), filteredTxHashList, filteredTxn);
             }

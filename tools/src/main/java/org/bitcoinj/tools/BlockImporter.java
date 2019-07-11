@@ -22,6 +22,7 @@ import org.bitcoinj.utils.BlockFileLoader;
 import com.google.common.base.Preconditions;
 
 import java.io.File;
+import java.io.IOException;
 
 /** Very thin wrapper around {@link org.bitcoinj.utils.BlockFileLoader} */
 public class BlockImporter {
@@ -57,14 +58,19 @@ public class BlockImporter {
         }
         
         AbstractBlockChain chain = null;
-        if (store instanceof FullPrunedBlockStore)
-            chain = new FullPrunedBlockChain(params, (FullPrunedBlockStore) store);
-        else
-            chain = new BlockChain(params, store);
-        
-        BlockFileLoader loader = new BlockFileLoader(params, BlockFileLoader.getReferenceClientBlockFileList());
-        
-        for (Block block : loader)
-            chain.add(block);
+        try {
+            final ValidHashStore validHashStore = new ValidHashStore(new File("validhashstore" + args[1] + ".hashes"));
+            if (store instanceof FullPrunedBlockStore)
+                chain = new FullPrunedBlockChain(params, (FullPrunedBlockStore) store, validHashStore);
+            else
+                chain = new BlockChain(params, store, validHashStore);
+
+            BlockFileLoader loader = new BlockFileLoader(params, BlockFileLoader.getReferenceClientBlockFileList());
+
+            for (Block block : loader)
+                chain.add(block);
+        } catch (IOException x) {
+            System.out.println(x.getMessage());
+        }
     }
 }

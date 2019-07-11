@@ -64,12 +64,13 @@ public class BitcoindComparisonTool {
         final RuleList blockList = generator.getBlocksToTest(false, runExpensiveTests, blockFile);
         final Map<Sha256Hash, Block> preloadedBlocks = new HashMap<Sha256Hash, Block>();
         final Iterator<Block> blocks = new BlockFileLoader(params, Arrays.asList(blockFile));
+        ValidHashStore validHashStore = new ValidHashStore(new File("bitcoindcomparisontool.hashes"));
 
         try {
             H2FullPrunedBlockStore store = new H2FullPrunedBlockStore(params, args.length > 0 ? args[0] : "BitcoindComparisonTool", blockList.maximumReorgBlockCount);
             store.resetStore();
             //store = new MemoryFullPrunedBlockStore(params, blockList.maximumReorgBlockCount);
-            chain = new FullPrunedBlockChain(params, store);
+            chain = new FullPrunedBlockChain(params, store, validHashStore);
         } catch (BlockStoreException e) {
             e.printStackTrace();
             System.exit(1);
@@ -78,7 +79,7 @@ public class BitcoindComparisonTool {
         VersionMessage ver = new VersionMessage(params, 42);
         ver.appendToSubVer("BlockAcceptanceComparisonTool", "1.1", null);
         ver.localServices = VersionMessage.NODE_NETWORK;
-        final Peer bitcoind = new Peer(params, ver, new BlockChain(params, new MemoryBlockStore(params)), new PeerAddress(params, InetAddress.getLocalHost()));
+        final Peer bitcoind = new Peer(params, ver, new BlockChain(params, new MemoryBlockStore(params), validHashStore), new PeerAddress(params, InetAddress.getLocalHost()));
         Preconditions.checkState(bitcoind.getVersionMessage().hasBlockChain());
 
         final BlockWrapper currentBlock = new BlockWrapper();

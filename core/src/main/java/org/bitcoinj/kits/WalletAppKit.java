@@ -66,6 +66,7 @@ public class WalletAppKit extends AbstractIdleService {
     protected final NetworkParameters params;
     protected volatile BlockChain vChain;
     protected volatile BlockStore vStore;
+    protected ValidHashStore validHashStore;
     protected volatile Wallet vWallet;
     protected volatile PeerGroup vPeerGroup;
 
@@ -267,10 +268,13 @@ public class WalletAppKit extends AbstractIdleService {
         log.info("Starting up with directory = {}", directory);
         try {
             File chainFile = new File(directory, filePrefix + ".spvchain");
+            File validHashFile = new File(directory, filePrefix + ".hashes");
             boolean chainFileExists = chainFile.exists();
             vWalletFile = new File(directory, filePrefix + ".wallet");
             boolean shouldReplayWallet = (vWalletFile.exists() && !chainFileExists) || restoreFromSeed != null;
             vWallet = createOrLoadWallet(shouldReplayWallet);
+            validHashStore = new ValidHashStore(validHashFile);
+
 
             // Initiate Bitcoin network objects (block store, blockchain and peer group)
             vStore = provideBlockStore(chainFile);
@@ -306,7 +310,7 @@ public class WalletAppKit extends AbstractIdleService {
                     vStore = new SPVBlockStore(params, chainFile);
                 }
             }
-            vChain = new BlockChain(params, vStore);
+            vChain = new BlockChain(params, vStore, validHashStore);
             vPeerGroup = createPeerGroup();
             if (this.userAgent != null)
                 vPeerGroup.setUserAgent(userAgent, version);

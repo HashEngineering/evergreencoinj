@@ -21,8 +21,10 @@ import org.bitcoinj.core.*;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.MemoryBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 import org.bitcoinj.utils.BriefLogFormatter;
 
+import java.io.File;
 import java.net.InetAddress;
 import java.util.concurrent.Future;
 
@@ -36,7 +38,8 @@ public class FetchBlock {
         final NetworkParameters params = TestNet3Params.get();
 
         BlockStore blockStore = new MemoryBlockStore(params);
-        BlockChain chain = new BlockChain(params, blockStore);
+        ValidHashStore validHashStore = new ValidHashStore(new File("validhashes.dat"));
+        BlockChain chain = new BlockChain(params, blockStore, validHashStore);
         PeerGroup peerGroup = new PeerGroup(params, chain);
         peerGroup.start();
         PeerAddress addr = new PeerAddress(InetAddress.getLocalHost(), params.getPort());

@@ -21,6 +21,7 @@ import org.bitcoinj.script.Script;
 import org.bitcoinj.script.Script.VerifyFlag;
 import org.bitcoinj.store.BlockStoreException;
 import org.bitcoinj.store.FullPrunedBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 import org.bitcoinj.utils.*;
 import org.bitcoinj.wallet.Wallet;
 import org.slf4j.Logger;
@@ -60,8 +61,8 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
      * one from scratch, or you can deserialize a saved wallet from disk using
      * {@link Wallet#loadFromFile(java.io.File, WalletExtension...)}
      */
-    public FullPrunedBlockChain(Context context, Wallet wallet, FullPrunedBlockStore blockStore) throws BlockStoreException {
-        this(context, new ArrayList<Wallet>(), blockStore);
+    public FullPrunedBlockChain(Context context, Wallet wallet, FullPrunedBlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        this(context, new ArrayList<Wallet>(), blockStore, validHashStore);
         addWallet(wallet);
     }
 
@@ -70,40 +71,40 @@ public class FullPrunedBlockChain extends AbstractBlockChain {
      * one from scratch, or you can deserialize a saved wallet from disk using
      * {@link Wallet#loadFromFile(java.io.File, WalletExtension...)}
      */
-    public FullPrunedBlockChain(NetworkParameters params, Wallet wallet, FullPrunedBlockStore blockStore) throws BlockStoreException {
-        this(Context.getOrCreate(params), wallet, blockStore);
+    public FullPrunedBlockChain(NetworkParameters params, Wallet wallet, FullPrunedBlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        this(Context.getOrCreate(params), wallet, blockStore, validHashStore);
     }
 
     /**
      * Constructs a block chain connected to the given store.
      */
-    public FullPrunedBlockChain(Context context, FullPrunedBlockStore blockStore) throws BlockStoreException {
-        this(context, new ArrayList<Wallet>(), blockStore);
+    public FullPrunedBlockChain(Context context, FullPrunedBlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        this(context, new ArrayList<Wallet>(), blockStore, validHashStore);
     }
 
     /**
      * See {@link #FullPrunedBlockChain(Context, Wallet, FullPrunedBlockStore)}
      */
-    public FullPrunedBlockChain(NetworkParameters params, FullPrunedBlockStore blockStore) throws BlockStoreException {
-        this(Context.getOrCreate(params), blockStore);
+    public FullPrunedBlockChain(NetworkParameters params, FullPrunedBlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        this(Context.getOrCreate(params), blockStore, validHashStore);
     }
 
     /**
      * Constructs a block chain connected to the given list of wallets and a store.
      */
-    public FullPrunedBlockChain(Context context, List<Wallet> listeners, FullPrunedBlockStore blockStore) throws BlockStoreException {
-        super(context, listeners, blockStore);
+    public FullPrunedBlockChain(Context context, List<Wallet> listeners, FullPrunedBlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        super(context, listeners, blockStore, validHashStore);
         this.blockStore = blockStore;
         // Ignore upgrading for now
         this.chainHead = blockStore.getVerifiedChainHead();
     }
 
     /**
-     * See {@link #FullPrunedBlockChain(Context, List, FullPrunedBlockStore)}
+     * See {@link #FullPrunedBlockChain(Context, List, FullPrunedBlockStore, ValidHashStore)}
      */
     public FullPrunedBlockChain(NetworkParameters params, List<Wallet> listeners,
-                                FullPrunedBlockStore blockStore) throws BlockStoreException {
-        this(Context.getOrCreate(params), listeners, blockStore);
+                                FullPrunedBlockStore blockStore, ValidHashStore validHashStore) throws BlockStoreException {
+        this(Context.getOrCreate(params), listeners, blockStore, validHashStore);
     }
 
     @Override

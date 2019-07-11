@@ -24,6 +24,7 @@ import org.bitcoinj.params.RegTestParams;
 import org.bitcoinj.params.TestNet3Params;
 import org.bitcoinj.store.BlockStore;
 import org.bitcoinj.store.MemoryBlockStore;
+import org.bitcoinj.store.ValidHashStore;
 import org.bitcoinj.utils.BriefLogFormatter;
 import org.bitcoinj.utils.Threading;
 import com.google.common.base.Charsets;
@@ -111,7 +112,8 @@ public class BuildCheckpoints {
         // Configure bitcoinj to fetch only headers, not save them to disk, connect to a local fully synced/validated
         // node and to save block headers that are on interval boundaries, as long as they are <1 month old.
         final BlockStore store = new MemoryBlockStore(params);
-        final BlockChain chain = new BlockChain(params, store);
+        final ValidHashStore validHashStore = new ValidHashStore(new File("validhashstore" + suffix + ".hashes"));
+        final BlockChain chain = new BlockChain(params, store, validHashStore);
         final PeerGroup peerGroup = new PeerGroup(params, chain);
         System.out.println("Connecting to " + peerAddress + "...");
         peerGroup.addAddress(peerAddress);

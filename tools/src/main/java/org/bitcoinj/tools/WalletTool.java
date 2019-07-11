@@ -101,10 +101,12 @@ public class WalletTool {
     private static NetworkParameters params;
     private static File walletFile;
     private static BlockStore store;
+    private static ValidHashStore validHashStore;
     private static AbstractBlockChain chain;
     private static PeerGroup peers;
     private static Wallet wallet;
     private static File chainFileName;
+    private static File validHashFile;
     private static ValidationMode mode;
     private static String password;
     private static org.bitcoin.protocols.payments.Protos.PaymentRequest paymentRequest;
@@ -215,6 +217,7 @@ public class WalletTool {
         OptionSpec<ValidationMode> modeFlag = parser.accepts("mode").withRequiredArg().ofType(ValidationMode.class)
                 .defaultsTo(ValidationMode.SPV);
         OptionSpec<String> chainFlag = parser.accepts("chain").withRequiredArg();
+        OptionSpec<String> validHashFlag = parser.accepts("validhashes").withRequiredArg();
         // For addkey/delkey.
         parser.accepts("pubkey").withRequiredArg();
         parser.accepts("privkey").withRequiredArg();
@@ -269,14 +272,17 @@ public class WalletTool {
             case PROD:
                 params = MainNetParams.get();
                 chainFileName = new File("mainnet.chain");
+                validHashFile = new File("mainnet.validhashes.dat");
                 break;
             case TEST:
                 params = TestNet3Params.get();
                 chainFileName = new File("testnet.chain");
+                validHashFile = new File("testnet.validhashes.dat");
                 break;
             case REGTEST:
                 params = RegTestParams.get();
                 chainFileName = new File("regtest.chain");
+                validHashFile = new File("regtest.validhashes.dat");
                 break;
             default:
                 throw new RuntimeException("Unreachable.");
@@ -288,6 +294,10 @@ public class WalletTool {
         // Allow the user to override the name of the chain used.
         if (options.has(chainFlag)) {
             chainFileName = new File(chainFlag.value(options));
+        }
+
+        if (options.has(validHashFlag)) {
+            validHashFile = new File(validHashFlag.value(options));
         }
 
         if (options.has("condition")) {
@@ -505,7 +515,7 @@ public class WalletTool {
         wallet.addAndActivateHDChain(chain);
     }
 
-    private static void rotate() throws BlockStoreException {
+    private static void rotate() throws BlockStoreException, IOException {
         setup();
         peers.start();
         // Set a key rotation time and possibly broadcast the resulting maintenance transactions.
@@ -569,7 +579,7 @@ public class WalletTool {
         }
     }
 
-    private static void send(List<String> outputs, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed) throws VerificationException {
+    private static void send(List<String> outputs, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed) throws VerificationException, IOException {
         try {
             // Convert the input strings to outputs.
             Transaction t = new Transaction(params);
@@ -688,7 +698,7 @@ public class WalletTool {
         }
     }
 
-    private static void sendCLTVPaymentChannel(String refund, String output, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed) throws VerificationException {
+    private static void sendCLTVPaymentChannel(String refund, String output, Coin feePerKb, String lockTimeStr, boolean allowUnconfirmed) throws VerificationException, IOException {
         try {
             // Convert the input strings to outputs.
             ECKey outputKey, refundKey;
@@ -776,7 +786,7 @@ public class WalletTool {
     /**
      * Settles a CLTV payment channel transaction given that we own both private keys (ie. for testing).
      */
-    private static void settleCLTVPaymentChannel(String txHash, String output, Coin feePerKb, boolean allowUnconfirmed) {
+    private static void settleCLTVPaymentChannel(String txHash, String output, Coin feePerKb, boolean allowUnconfirmed) throws IOException {
         try {
             OutputSpec outputSpec;
             Coin value;
@@ -880,7 +890,7 @@ public class WalletTool {
     /**
      * Refunds a CLTV payment channel transaction after the lock time has expired.
      */
-    private static void refundCLTVPaymentChannel(String txHash, String output, Coin feePerKb, boolean allowUnconfirmed) {
+    private static void refundCLTVPaymentChannel(String txHash, String output, Coin feePerKb, boolean allowUnconfirmed) throws IOException {
         try {
             OutputSpec outputSpec;
             Coin value;
@@ -1102,7 +1112,7 @@ public class WalletTool {
         }
     }
 
-    private static void wait(WaitForEnum waitFor) throws BlockStoreException {
+    private static void wait(WaitForEnum waitFor) throws BlockStoreException, IOException {
         final CountDownLatch latch = new CountDownLatch(1);
         setup();
         switch (waitFor) {
@@ -1171,7 +1181,7 @@ public class WalletTool {
     }
 
     // Sets up all objects needed for network communication but does not bring up the peers.
-    private static void setup() throws BlockStoreException {
+    private static void setup() throws BlockStoreException, IOException {
         if (store != null) return;  // Already done.
         // Will create a fresh chain if one doesn't exist or there is an issue with this one.
         boolean reset = !chainFileName.exists();
@@ -1180,9 +1190,10 @@ public class WalletTool {
             System.out.println("Chain file is missing so resetting the wallet.");
             reset();
         }
+        validHashStore = new ValidHashStore(validHashFile);
         if (mode == ValidationMode.SPV) {
             store = new SPVBlockStore(params, chainFileName);
-            chain = new BlockChain(params, wallet, store);
+            chain = new BlockChain(params, wallet, store, validHashStore);
             if (reset) {
                 try {
                     CheckpointManager.checkpoint(params, CheckpointManager.openStream(params), store,
@@ -1197,7 +1208,7 @@ public class WalletTool {
         } else if (mode == ValidationMode.FULL) {
             FullPrunedBlockStore s = new H2FullPrunedBlockStore(params, chainFileName.getAbsolutePath(), 5000);
             store = s;
-            chain = new FullPrunedBlockChain(params, wallet, s);
+            chain = new FullPrunedBlockChain(params, wallet, s, validHashStore);
         }
         // This will ensure the wallet is saved when it changes.
         wallet.autosaveToFile(walletFile, 5, TimeUnit.SECONDS, null);
@@ -1251,6 +1262,9 @@ public class WalletTool {
         } catch (BlockStoreException e) {
             System.err.println("Error reading block chain file " + chainFileName + ": " + e.getMessage());
             e.printStackTrace();
+        } catch (IOException e) {
+            System.err.println("Error reading valid hashes file " + validHashFile + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -1261,6 +1275,7 @@ public class WalletTool {
                 peers.stop();
             saveWallet(walletFile);
             store.close();
+            validHashStore.close();
             wallet = null;
         } catch (BlockStoreException e) {
             throw new RuntimeException(e);
@@ -1453,10 +1468,10 @@ public class WalletTool {
         System.out.println(key.toAddress(params) + " " + key);
     }
 
-    private static void dumpWallet() throws BlockStoreException {
+    private static void dumpWallet() throws BlockStoreException, IOException {
         // Setup to get the chain height so we can estimate lock times, but don't wipe the transactions if it's not
         // there just for the dump case.
-        if (chainFileName.exists())
+        if (chainFileName.exists() && validHashFile.exists())
             setup();
         System.out.println(wallet.toString(options.has("dump-privkeys"), true, true, chain));
     }

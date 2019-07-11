@@ -103,8 +103,8 @@ public class VersionMessage extends Message {
             // We hard-code the IPv4 localhost address here rather than use InetAddress.getLocalHost() because some
             // mobile phones have broken localhost DNS entries, also, this is faster.
             final byte[] localhost = { 127, 0, 0, 1 };
-            myAddr = new PeerAddress(InetAddress.getByAddress(localhost), params.getPort(), 0);
-            theirAddr = new PeerAddress(InetAddress.getByAddress(localhost), params.getPort(), 0);
+            myAddr = new PeerAddress(InetAddress.getByAddress(localhost), params.getPort(), clientVersion);
+            theirAddr = new PeerAddress(InetAddress.getByAddress(localhost), params.getPort(), clientVersion);
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);  // Cannot happen (illegal IP length).
         }
@@ -113,7 +113,7 @@ public class VersionMessage extends Message {
         relayTxesBeforeFilter = true;
 
         length = 85;
-        if (protocolVersion > 31402)
+        if (protocolVersion > 70000)
             length += 8;
         length += VarInt.sizeOf(subVer.length()) + subVer.length();
     }
@@ -123,9 +123,9 @@ public class VersionMessage extends Message {
         clientVersion = (int) readUint32();
         localServices = readUint64().longValue();
         time = readUint64().longValue();
-        myAddr = new PeerAddress(params, payload, cursor, 0);
+        myAddr = new PeerAddress(params, payload, cursor, clientVersion);
         cursor += myAddr.getMessageSize();
-        theirAddr = new PeerAddress(params, payload, cursor, 0);
+        theirAddr = new PeerAddress(params, payload, cursor, clientVersion);
         cursor += theirAddr.getMessageSize();
         // uint64 localHostNonce  (random data)
         // We don't care about the localhost nonce. It's used to detect connecting back to yourself in cases where
