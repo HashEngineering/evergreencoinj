@@ -34,6 +34,7 @@ import java.io.*;
 import java.math.*;
 import java.util.*;
 
+import static com.google.common.base.Preconditions.checkState;
 import static org.bitcoinj.core.Coin.*;
 import org.bitcoinj.utils.VersionTally;
 
@@ -52,13 +53,13 @@ public abstract class NetworkParameters {
     public static final byte[] SATOSHI_KEY = Utils.HEX.decode("04fc9702847840aaf195de8442ebecedf5b095cdbb9bc716bda9110971b28a49e0ead8564ff0db22209e0374782c093bb899692d524e9d6a6956e7c5ecbcd68284");
 
     /** The string returned by getId() for the main, production network where people trade things. */
-    public static final String ID_MAINNET = "org.bitcoin.production";
+    public static final String ID_MAINNET = "org.evergreencoin.production";
     /** The string returned by getId() for the testnet. */
-    public static final String ID_TESTNET = "org.bitcoin.test";
+    public static final String ID_TESTNET = "org.evergreencoin.test";
     /** The string returned by getId() for regtest mode. */
-    public static final String ID_REGTEST = "org.bitcoin.regtest";
+    public static final String ID_REGTEST = "org.evergreencoin.regtest";
     /** Unit test network. */
-    public static final String ID_UNITTESTNET = "org.bitcoinj.unittest";
+    public static final String ID_UNITTESTNET = "org.evergreencoin.unittest";
 
     /** The string used by the payment protocol to represent the main net. */
     public static final String PAYMENT_PROTOCOL_ID_MAINNET = "main";
@@ -115,12 +116,13 @@ public abstract class NetworkParameters {
     private static Block createGenesis(NetworkParameters n) {
         Block genesisBlock = new Block(n, Block.BLOCK_VERSION_GENESIS);
         Transaction t = new Transaction(n);
+        t.setTime(1448956800);
         try {
             // A script containing the difficulty bits and the following message:
             //
-            //   "The Times 03/Jan/2009 Chancellor on brink of second bailout for banks"
+            //   "EGC to the tree top!"
             byte[] bytes = Utils.HEX.decode
-                    ("04ffff001d0104455468652054696d65732030332f4a616e2f32303039204368616e63656c6c6f72206f6e206272696e6b206f66207365636f6e64206261696c6f757420666f722062616e6b73");
+                    ("04ffff001d020f274b4d61746f6e69732030372d4155472d3230313220506172616c6c656c2043757272656e6369657320416e642054686520526f61646d617020546f204d6f6e65746172792046726565646f6d");
             t.addInput(new TransactionInput(n, t, bytes));
             ByteArrayOutputStream scriptPubKeyBytes = new ByteArrayOutputStream();
             Script.writeBytes(scriptPubKeyBytes, Utils.HEX.decode
@@ -132,6 +134,11 @@ public abstract class NetworkParameters {
             throw new RuntimeException(e);
         }
         genesisBlock.addTransaction(t);
+
+        genesisBlock.setMerkleRoot(Sha256Hash.wrap("201817b2cc654357f5491cd1c2c0553e7d2001a057e1fb0d31ce7c4259c1cbe5"));
+        String merkleHash = genesisBlock.getMerkleRoot().toString();
+        checkState(merkleHash.equals("201817b2cc654357f5491cd1c2c0553e7d2001a057e1fb0d31ce7c4259c1cbe5"), merkleHash);
+
         return genesisBlock;
     }
 
@@ -149,7 +156,7 @@ public abstract class NetworkParameters {
     /**
      * The maximum number of coins to be generated
      */
-    public static final long MAX_COINS = 21000000;
+    public static final long MAX_COINS = 26298000L;
 
     /**
      * The maximum money to be generated
@@ -526,8 +533,8 @@ public abstract class NetworkParameters {
     public static enum ProtocolVersion {
         MINIMUM(70000),
         PONG(60001),
-        BLOOM_FILTER(70000),
-        CURRENT(70001);
+        BLOOM_FILTER(100000),
+        CURRENT(80015);
 
         private final int bitcoinProtocol;
 

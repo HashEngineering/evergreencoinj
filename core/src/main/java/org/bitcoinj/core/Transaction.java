@@ -124,6 +124,7 @@ public class Transaction extends ChildMessage {
 
     // These are bitcoin serialized.
     private long version;
+    private long time;
     private ArrayList<TransactionInput> inputs;
     private ArrayList<TransactionOutput> outputs;
 
@@ -199,6 +200,7 @@ public class Transaction extends ChildMessage {
     public Transaction(NetworkParameters params) {
         super(params);
         version = 1;
+        time = Utils.currentTimeSeconds();
         inputs = new ArrayList<TransactionInput>();
         outputs = new ArrayList<TransactionOutput>();
         // We don't initialize appearsIn deliberately as it's only useful for transactions stored in the wallet.
@@ -460,6 +462,13 @@ public class Transaction extends ChildMessage {
         return true;
     }
 
+    public long getTime() {
+    	return time;
+    }
+    
+    public void setTime(long nTime) {
+    	this.time = nTime;
+    }
     /**
      * Returns the earliest time at which the transaction was seen (broadcast or included into the chain),
      * or the epoch if that information isn't available.
@@ -520,8 +529,8 @@ public class Transaction extends ChildMessage {
 
     protected static int calcLength(byte[] buf, int offset) {
         VarInt varint;
-        // jump past version (uint32)
-        int cursor = offset + 4;
+        // jump past version (uint32) and time (uint32)
+        int cursor = offset + 8;
 
         int i;
         long scriptLen;
@@ -559,7 +568,8 @@ public class Transaction extends ChildMessage {
         cursor = offset;
 
         version = readUint32();
-        optimalEncodingMessageSize = 4;
+        time = readUint32();
+        optimalEncodingMessageSize = 8;
 
         // First come the inputs.
         long numInputs = readVarInt();
@@ -1069,6 +1079,7 @@ public class Transaction extends ChildMessage {
     @Override
     protected void bitcoinSerializeToStream(OutputStream stream) throws IOException {
         uint32ToByteStreamLE(version, stream);
+        uint32ToByteStreamLE(time, stream);
         stream.write(new VarInt(inputs.size()).encode());
         for (TransactionInput in : inputs)
             in.bitcoinSerialize(stream);

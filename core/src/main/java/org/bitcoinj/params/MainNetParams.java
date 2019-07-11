@@ -36,13 +36,13 @@ public class MainNetParams extends AbstractBitcoinNetParams {
         super();
         interval = INTERVAL;
         targetTimespan = TARGET_TIMESPAN;
-        maxTarget = Utils.decodeCompactBits(0x1d00ffffL);
-        dumpedPrivateKeyHeader = 128;
-        addressHeader = 0;
-        p2shHeader = 5;
+        maxTarget = Utils.decodeCompactBits(0x1e0fffffL);
+        dumpedPrivateKeyHeader = 128+33;
+        addressHeader = 33;
+        p2shHeader = 85;
         acceptableAddressCodes = new int[] { addressHeader, p2shHeader };
-        port = 8333;
-        packetMagic = 0xf9beb4d9L;
+        port = 5757;
+        packetMagic = 0x21246247L;
         bip32HeaderPub = 0x0488B21E; //The 4 byte header that serializes in base58 to "xpub".
         bip32HeaderPriv = 0x0488ADE4; //The 4 byte header that serializes in base58 to "xprv"
 
@@ -50,45 +50,75 @@ public class MainNetParams extends AbstractBitcoinNetParams {
         majorityRejectBlockOutdated = MAINNET_MAJORITY_REJECT_BLOCK_OUTDATED;
         majorityWindow = MAINNET_MAJORITY_WINDOW;
 
-        genesisBlock.setDifficultyTarget(0x1d00ffffL);
-        genesisBlock.setTime(1231006505L);
-        genesisBlock.setNonce(2083236893);
+        genesisBlock.setDifficultyTarget(0x1e0fffffL);
+        genesisBlock.setTime(1448956800L);
+        genesisBlock.setNonce(4891360L);
         id = ID_MAINNET;
         subsidyDecreaseBlockCount = 210000;
-        spendableCoinbaseDepth = 100;
+        spendableCoinbaseDepth = 500;
         String genesisHash = genesisBlock.getHashAsString();
-        checkState(genesisHash.equals("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"),
+        checkState(genesisHash.equals("00000a02cefbc063ba09034a6fbc123f7062b7ee0e4eed9128a1cadc7533e388"),
                 genesisHash);
 
         // This contains (at a minimum) the blocks which are not BIP30 compliant. BIP30 changed how duplicate
         // transactions are handled. Duplicated transactions could occur in the case where a coinbase had the same
         // extraNonce and the same outputs but appeared at different heights, and greatly complicated re-org handling.
         // Having these here simplifies block connection logic considerably.
-        checkpoints.put(91722, Sha256Hash.wrap("00000000000271a2dc26e7667f8419f2e15416dc6955e5a6c6cdf3f2574dd08e"));
-        checkpoints.put(91812, Sha256Hash.wrap("00000000000af0aed4792b1acee3d966af36cf5def14935db8de83d6f9306f2f"));
-        checkpoints.put(91842, Sha256Hash.wrap("00000000000a4d0a398161ffc163c503763b1f4360639393e0e4c8e300e0caec"));
-        checkpoints.put(91880, Sha256Hash.wrap("00000000000743f190a18c5577a3c2d2a1f610ae9601ac046a38084ccb7cd721"));
-        checkpoints.put(200000, Sha256Hash.wrap("000000000000034a7dedef4a161fa058a2d67a173a90155f3a2fe6fc132e0ebf"));
+        checkpoints.put( 10000, new Sha256Hash("000000004d6c24e275990d09778c28d36aa4c77e7243bb7daa6ea867a7129d7b"));
+        checkpoints.put( 20000, new Sha256Hash("000000004e12e6e5a03c3923845a4a198f137ca94a314cf068cff44b04197aa5"));
+        checkpoints.put( 30000, new Sha256Hash("0000000026100d9b37836e21c0dcec409ca55dd04882bbed9a796272f1e851f9"));
+        checkpoints.put( 40000, new Sha256Hash("00000000042b21154e929d7510d35f4ffcd2c02c6b68da7a5ff3d816b62a65c4"));
+        checkpoints.put( 50004, new Sha256Hash("000000000004d1d4032e811c0fc67b01c014492f5f19153b14a0e0d464754561"));
+        checkpoints.put( 60000, new Sha256Hash("0000000006f508e1b5f9ca1c97778a546e1866ca30d6c58f3d380fd2b76ea7eb"));
+        checkpoints.put( 75002, new Sha256Hash("00000000046abee379b15f4fabbcf47b8f2560012e9d75aa5ecae5351bd15e36"));
+        checkpoints.put(100000, new Sha256Hash("000000000bcaadbdc933e448f4b572a3395bc05ba5471b4596fc56ce5806971b"));
+        checkpoints.put(125000, new Sha256Hash("000000000797e4891dfec75012ea9937aa910f4cd59f867e64606d04cb303ea9"));
+        checkpoints.put(200002, new Sha256Hash("000000004aff3938ebe8e6a0c7a4afc0dc54d20639b06e22c362b5337da5a3b7"));
+        checkpoints.put(300001, new Sha256Hash("000000000d059badb1d58cd9a644ddc16c7173395270e5d4460ad376b3b42097"));
+        checkpoints.put(400000, new Sha256Hash("000000000d780cb4a5e9d67746e7856bd1b06a8c4d2dd3eea3d6510602685f76"));
+        checkpoints.put(431000, new Sha256Hash("0000000000e9c020b6abbfb10d116f6bdf5cd11dd1457bdaa900beb58c1f3f2e"));
+        checkpoints.put(446023, new Sha256Hash("00000000245cd1d12f16893305bc4c21357a598916dc7bb54b3873643b42d3d5"));
+        checkpoints.put(487135, new Sha256Hash("000000008691d6c33c3e400f369d13f8d59afc527492b7e3255bf539bde7f00d"));
+        checkpoints.put(732854, new Sha256Hash("58a6ef4c386b6664875f409da489ac56dcde750bb39f1b88f73f10fe54087faa"));
+        checkpoints.put(804006, new Sha256Hash("137146a8e2a4c60eee3ce806aa1b4ab20a9f6118ffd9f7c6b7064ba854e57a5c"));
 
         dnsSeeds = new String[] {
-                "seed.bitcoin.sipa.be",         // Pieter Wuille
-                "dnsseed.bluematt.me",          // Matt Corallo
-                "dnsseed.bitcoin.dashjr.org",   // Luke Dashjr
-                "seed.bitcoinstats.com",        // Chris Decker
-                "seed.bitnodes.io",             // Addy Yeow
-                "bitseed.xf2.org",              // Jeff Garzik
-                "seed.bitcoin.jonasschnelli.ch",// Jonas Schnelli
-                "bitcoin.bloqseeds.net",        // Bloq
+                "seed.evergreencoin.org",
+                "seed2.evergreencoin.org",
+                "cwi-seed01.evergreencoin.org",
+                "cwi-seed02.evergreencoin.org",
+                "cwi-seed03.evergreencoin.org",
+                "cwi-seed04.evergreencoin.org",
+                "cwi-seed05.evergreencoin.org",
+                "cwi-seed06.evergreencoin.org",
+                "cwi-seed07.evergreencoin.org",
+                "cwi-seed08.evergreencoin.org",
+                "cwi-seed09.evergreencoin.org",
+                "cwi-seed10.evergreencoin.org",
+                "cwi-seed11.evergreencoin.org",
+                "cwi-seed12.evergreencoin.org",
+                "cwi-seed13.evergreencoin.org",
+                "cwi-seed14.evergreencoin.org",
+                "cwi-seed15.evergreencoin.org",
+                "cwi-seed16.evergreencoin.org",
+                "cwi-seed17.evergreencoin.org",
+                "cwi-seed18.evergreencoin.org",
+                "cwi-seed19.evergreencoin.org",
+                "cwi-seed20.evergreencoin.org",
+                "cwi-seed21.evergreencoin.org",
+                "cwi-seed22.evergreencoin.org",
+                "cwi-seed23.evergreencoin.org",
+                "cwi-seed25.evergreencoin.org"
         };
-        httpSeeds = new HttpDiscovery.Details[] {
+        httpSeeds = null; /*new HttpDiscovery.Details[] {
                 // Andreas Schildbach
                 new HttpDiscovery.Details(
                         ECKey.fromPublicOnly(Utils.HEX.decode("0238746c59d46d5408bf8b1d0af5740fe1a6e1703fcb56b2953f0b965c740d256f")),
                         URI.create("http://httpseed.bitcoin.schildbach.de/peers")
                 )
-        };
+        };*/
 
-        addrSeeds = new int[] {
+        addrSeeds = null; /*new int[] {
                 0x1ddb1032, 0x6242ce40, 0x52d6a445, 0x2dd7a445, 0x8a53cd47, 0x73263750, 0xda23c257, 0xecd4ed57,
                 0x0a40ec59, 0x75dce160, 0x7df76791, 0x89370bad, 0xa4f214ad, 0x767700ae, 0x638b0418, 0x868a1018,
                 0xcd9f332e, 0x0129653e, 0xcc92dc3e, 0x96671640, 0x56487e40, 0x5b66f440, 0xb1d01f41, 0xf1dc6041,
@@ -129,7 +159,7 @@ public class MainNetParams extends AbstractBitcoinNetParams {
                 0x6d27c257, 0x977fffad, 0x7baa5d5d, 0x1213be43, 0xb167e5a9, 0x640fe8ca, 0xbc9ea655, 0x0f820a4c,
                 0x0f097059, 0x69ac957c, 0x366d8453, 0xb1ba2844, 0x8857f081, 0x70b5be63, 0xc545454b, 0xaf36ded1,
                 0xb5a4b052, 0x21f062d1, 0x72ab89b2, 0x74a45318, 0x8312e6bc, 0xb916965f, 0x8aa7c858, 0xfe7effad,
-        };
+        };*/
     }
 
     private static MainNetParams instance;

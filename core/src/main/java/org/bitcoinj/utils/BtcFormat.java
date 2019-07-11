@@ -494,11 +494,11 @@ public abstract class BtcFormat extends Format {
      */
 
     /** The conventional international currency code for bitcoins: "BTC" */
-    private static final String COIN_CODE = "BTC";
+    private static final String COIN_CODE = "EGC";
     /** The default currency symbols for bitcoins */
-    private static final String COIN_SYMBOL = "฿";
+    private static final String COIN_SYMBOL = "E";
     /** An alternative currency symbol to use in locales where the default symbol is used for the national currency. */
-    protected static final String COIN_SYMBOL_ALT = "Ƀ";
+    protected static final String COIN_SYMBOL_ALT = "E";
 
     protected final DecimalFormat numberFormat; // warning: mutable
     protected final int minimumFractionDigits;
